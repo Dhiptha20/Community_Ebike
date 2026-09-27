@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<nav th:fragment="navbar(pageTitle)" class="app-navbar">
+    <div class="d-flex align-items-center gap-3">
+        <button id="sidebarToggle" class="btn btn-outline-secondary d-lg-none" type="button">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <h4 class="page-title mb-0" th:text="${pageTitle}">Dashboard</h4>
+    </div>
+
+    <div class="user-profile-widget" sec:authorize="isAuthenticated()">
+        <div class="text-end d-none d-sm-block">
+            <div class="fw-bold fs-6 text-dark" sec:authentication="principal.fullName">User Name</div>
+            <div class="text-muted small" style="font-size: 0.75rem;">
+                <span sec:authorize="hasRole('ADMIN')" class="text-primary fw-semibold"><i class="fa-solid fa-shield-halved me-1"></i>Administrator</span>
+                <span sec:authorize="hasRole('INVOICING_USER')" class="text-warning fw-semibold"><i class="fa-solid fa-coins me-1"></i>Finance Officer</span>
+                <span sec:authorize="hasRole('RIDER')" class="text-success fw-semibold"><i class="fa-solid fa-person-biking me-1"></i>Verified Rider</span>
+            </div>
+        </div>
+
+        <div class="user-avatar" sec:authentication="principal.initial">U</div>
+
+        <div class="dropdown ms-2">
+            <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li><a class="dropdown-item" th:href="@{/profile}"><i class="fa-regular fa-user me-2 text-muted"></i>My Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form th:action="@{/logout}" method="post" class="m-0 p-0">
+                        <button type="submit" class="dropdown-item text-danger"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Sign Out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+</body>
+</html>

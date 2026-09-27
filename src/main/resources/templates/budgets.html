@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Sector Budget Management')}"></head>
+<body>
+
+<div class="app-container">
+    <div th:replace="~{fragments/sidebar :: sidebar('budgets')}"></div>
+
+    <div class="app-main">
+        <div th:replace="~{fragments/navbar :: navbar('Sector-Wise Budget Management')}"></div>
+
+        <div class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <!-- Top Budget Utilization Metrics -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card stat-card-indigo">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Total Allocated Budget</span>
+                                <div class="stat-value text-indigo">₹<span th:text="${#numbers.formatDecimal(totalAllocated, 1, 2)}">580,000.00</span></div>
+                            </div>
+                            <div class="stat-icon icon-indigo">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="stat-card stat-card-rose">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Total Actual Spend</span>
+                                <div class="stat-value text-danger">₹<span th:text="${#numbers.formatDecimal(totalSpend, 1, 2)}">162,000.00</span></div>
+                            </div>
+                            <div class="stat-icon icon-rose">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="stat-card stat-card-emerald">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Remaining Variance</span>
+                                <div class="stat-value text-success">₹<span th:text="${#numbers.formatDecimal(totalVariance, 1, 2)}">418,000.00</span></div>
+                            </div>
+                            <div class="stat-icon icon-emerald">
+                                <i class="fa-solid fa-piggy-bank"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sector Budget Visual Comparison Chart -->
+            <div class="custom-card mb-4">
+                <div class="card-header-clean">
+                    <h5><i class="fa-solid fa-chart-column text-primary me-2"></i>Sector Allocation vs Expenditure Variance</h5>
+                    <span class="badge bg-light text-secondary border">FY 2024-2025</span>
+                </div>
+                <div class="p-3">
+                    <canvas id="sectorBudgetChart" height="95"></canvas>
+                </div>
+            </div>
+
+            <!-- Sector Budgets Table -->
+            <div class="custom-card">
+                <div class="card-header-clean">
+                    <h5><i class="fa-solid fa-table-cells text-primary me-2"></i>Sector Budget Register</h5>
+                    <button type="button" class="btn btn-sm btn-emerald fw-bold" data-bs-toggle="modal" data-bs-target="#editBudgetModal">
+                        <i class="fa-solid fa-sliders me-1"></i> Configure Sector Fund
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Sector / Department</th>
+                                <th>Allocated Fund</th>
+                                <th>Actual Spend</th>
+                                <th>Variance (Remaining)</th>
+                                <th>Budget Utilization</th>
+                                <th>Fiscal Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="b : ${budgets}">
+                                <td class="fw-bold">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa-solid fa-layer-group"></i>
+                                        </div>
+                                        <span th:text="${b.sector}">Sector</span>
+                                    </div>
+                                </td>
+                                <td class="fw-bold text-dark">
+                                    ₹<span th:text="${#numbers.formatDecimal(b.allocatedFund, 1, 2)}">150,000.00</span>
+                                </td>
+                                <td class="text-danger fw-semibold">
+                                    ₹<span th:text="${#numbers.formatDecimal(b.actualSpend, 1, 2)}">35,000.00</span>
+                                </td>
+                                <td class="text-success fw-bold">
+                                    ₹<span th:text="${#numbers.formatDecimal(b.variance, 1, 2)}">115,000.00</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2" style="min-width: 140px;">
+                                        <div class="progress flex-grow-1" style="height: 8px;">
+                                            <div class="progress-bar"
+                                                 th:classappend="${b.utilizationPercentage > 85} ? 'bg-danger' : (${b.utilizationPercentage > 50} ? 'bg-warning' : 'bg-primary')"
+                                                 th:style="'width: ' + ${b.utilizationPercentage} + '%;'"></div>
+                                        </div>
+                                        <span class="small fw-bold" th:text="${b.utilizationPercentage} + '%'">23.3%</span>
+                                    </div>
+                                </td>
+                                <td class="small text-muted" th:text="${b.fiscalYear}">2024-2025</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
+</div>
+
+<!-- Modal: Configure Budget -->
+<div class="modal fade" id="editBudgetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form th:action="@{/budgets/save}" th:object="${newBudget}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-sliders text-primary me-2"></i>Configure Sector Budget</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Sector</label>
+                        <select class="form-select" th:field="*{sector}" required>
+                            <option value="Fleet Maintenance">Fleet Maintenance</option>
+                            <option value="Docking Stations">Docking Stations</option>
+                            <option value="Battery Charging">Battery Charging</option>
+                            <option value="Fleet Rebalancing">Fleet Rebalancing</option>
+                            <option value="Operations">Operations</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Allocated Fund (₹)</label>
+                        <input type="number" step="0.01" min="0" class="form-control" th:field="*{allocatedFund}" placeholder="e.g. 150000" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Fiscal Year</label>
+                        <input type="text" class="form-control" th:field="*{fiscalYear}" value="2024-2025" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-emerald fw-bold">Save Allocation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const budgetsData = /*[[${budgets}]]*/ [];
+    const labels = budgetsData.map(b => b.sector);
+    const allocated = budgetsData.map(b => b.allocatedFund);
+    const actual = budgetsData.map(b => b.actualSpend);
+    const variance = budgetsData.map(b => b.variance);
+
+    const ctx = document.getElementById('sectorBudgetChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Allocated Fund (₹)',
+                    data: allocated,
+                    backgroundColor: 'rgba(99, 102, 241, 0.75)',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Actual Spend (₹)',
+                    data: actual,
+                    backgroundColor: 'rgba(239, 68, 68, 0.75)',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Variance / Unspent (₹)',
+                    data: variance,
+                    backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 12 } }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    /*]]>*/
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<aside th:fragment="sidebar(activePage)" class="app-sidebar">
+    <div class="sidebar-header">
+        <a th:href="@{/dashboard}" class="sidebar-brand">
+            <div class="sidebar-brand-icon">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+                <div>E-BIKE FLEET</div>
+                <div style="font-size: 0.72rem; color: #10b981; font-weight: 500; letter-spacing: 0.05em;">SMART MICROMOBILITY</div>
+            </div>
+        </a>
+
+        <div sec:authorize="hasRole('ADMIN')">
+            <span class="sidebar-role-badge role-badge-admin"><i class="fa-solid fa-crown me-1"></i>ADMIN CONSOLE</span>
+        </div>
+        <div sec:authorize="hasRole('INVOICING_USER')">
+            <span class="sidebar-role-badge role-badge-finance"><i class="fa-solid fa-coins me-1"></i>FINANCE DESK</span>
+        </div>
+        <div sec:authorize="hasRole('RIDER')">
+            <span class="sidebar-role-badge role-badge-rider"><i class="fa-solid fa-user-check me-1"></i>RIDER PORTAL</span>
+        </div>
+    </div>
+
+    <div class="sidebar-nav">
+        <!-- ADMIN NAVIGATION -->
+        <div sec:authorize="hasRole('ADMIN')">
+            <div class="nav-section-title">Operations & Fleet</div>
+            <a th:href="@{/dashboard}" class="nav-item-link" th:classappend="${activePage == 'dashboard'} ? 'active'">
+                <i class="fa-solid fa-gauge-high"></i> <span>Fleet Dashboard</span>
+            </a>
+            <a th:href="@{/bikes}" class="nav-item-link" th:classappend="${activePage == 'bikes'} ? 'active'">
+                <i class="fa-solid fa-bicycle"></i> <span>E-Bikes Fleet</span>
+            </a>
+            <a th:href="@{/stations}" class="nav-item-link" th:classappend="${activePage == 'stations'} ? 'active'">
+                <i class="fa-solid fa-charging-station"></i> <span>Docking Stations</span>
+            </a>
+            <a th:href="@{/telemetry}" class="nav-item-link" th:classappend="${activePage == 'telemetry'} ? 'active'">
+                <i class="fa-solid fa-satellite-dish"></i> <span>GPS & Battery Telemetry</span>
+            </a>
+            <a th:href="@{/trips}" class="nav-item-link" th:classappend="${activePage == 'trips'} ? 'active'">
+                <i class="fa-solid fa-route"></i> <span>Trip Management</span>
+            </a>
+            <a th:href="@{/riders}" class="nav-item-link" th:classappend="${activePage == 'riders'} ? 'active'">
+                <i class="fa-solid fa-users"></i> <span>Registered Riders</span>
+            </a>
+
+            <div class="nav-section-title">Finance & Accounts</div>
+            <a th:href="@{/invoices}" class="nav-item-link" th:classappend="${activePage == 'invoices'} ? 'active'">
+                <i class="fa-solid fa-file-invoice-dollar"></i> <span>Invoices & Billing</span>
+            </a>
+            <a th:href="@{/payments}" class="nav-item-link" th:classappend="${activePage == 'payments'} ? 'active'">
+                <i class="fa-solid fa-credit-card"></i> <span>Payments Ledger</span>
+            </a>
+            <a th:href="@{/purchase-orders}" class="nav-item-link" th:classappend="${activePage == 'purchase-orders'} ? 'active'">
+                <i class="fa-solid fa-wrench"></i> <span>Maintenance POs</span>
+            </a>
+            <a th:href="@{/vendors}" class="nav-item-link" th:classappend="${activePage == 'vendors'} ? 'active'">
+                <i class="fa-solid fa-truck-field"></i> <span>Vendors & Suppliers</span>
+            </a>
+            <a th:href="@{/budgets}" class="nav-item-link" th:classappend="${activePage == 'budgets'} ? 'active'">
+                <i class="fa-solid fa-chart-pie"></i> <span>Sector Budgets</span>
+            </a>
+            <a th:href="@{/accounts}" class="nav-item-link" th:classappend="${activePage == 'accounts'} ? 'active'">
+                <i class="fa-solid fa-scale-balanced"></i> <span>Double-Entry Accounts</span>
+            </a>
+            <a th:href="@{/reports}" class="nav-item-link" th:classappend="${activePage == 'reports'} ? 'active'">
+                <i class="fa-solid fa-file-lines"></i> <span>Analytics & Reports</span>
+            </a>
+        </div>
+
+        <!-- INVOICING USER NAVIGATION -->
+        <div sec:authorize="hasRole('INVOICING_USER')">
+            <div class="nav-section-title">Finance Management</div>
+            <a th:href="@{/invoicing/dashboard}" class="nav-item-link" th:classappend="${activePage == 'dashboard'} ? 'active'">
+                <i class="fa-solid fa-chart-line"></i> <span>Finance Dashboard</span>
+            </a>
+            <a th:href="@{/invoices}" class="nav-item-link" th:classappend="${activePage == 'invoices'} ? 'active'">
+                <i class="fa-solid fa-file-invoice-dollar"></i> <span>Customer Invoices</span>
+            </a>
+            <a th:href="@{/payments}" class="nav-item-link" th:classappend="${activePage == 'payments'} ? 'active'">
+                <i class="fa-solid fa-credit-card"></i> <span>Payment Receipts</span>
+            </a>
+            <a th:href="@{/purchase-orders}" class="nav-item-link" th:classappend="${activePage == 'purchase-orders'} ? 'active'">
+                <i class="fa-solid fa-file-signature"></i> <span>Purchase Orders</span>
+            </a>
+            <a th:href="@{/vendors}" class="nav-item-link" th:classappend="${activePage == 'vendors'} ? 'active'">
+                <i class="fa-solid fa-truck-field"></i> <span>Vendor Directory</span>
+            </a>
+            <a th:href="@{/budgets}" class="nav-item-link" th:classappend="${activePage == 'budgets'} ? 'active'">
+                <i class="fa-solid fa-chart-pie"></i> <span>Budget Monitoring</span>
+            </a>
+            <a th:href="@{/accounts}" class="nav-item-link" th:classappend="${activePage == 'accounts'} ? 'active'">
+                <i class="fa-solid fa-scale-balanced"></i> <span>Accounting Ledger</span>
+            </a>
+            <a th:href="@{/reports}" class="nav-item-link" th:classappend="${activePage == 'reports'} ? 'active'">
+                <i class="fa-solid fa-file-lines"></i> <span>Financial Reports</span>
+            </a>
+        </div>
+
+        <!-- RIDER NAVIGATION -->
+        <div sec:authorize="hasRole('RIDER')">
+            <div class="nav-section-title">My Micromobility</div>
+            <a th:href="@{/rider/dashboard}" class="nav-item-link" th:classappend="${activePage == 'dashboard'} ? 'active'">
+                <i class="fa-solid fa-house"></i> <span>Rider Dashboard</span>
+            </a>
+            <a th:href="@{/rider/bikes}" class="nav-item-link" th:classappend="${activePage == 'bikes'} ? 'active'">
+                <i class="fa-solid fa-bicycle"></i> <span>Find Available Bikes</span>
+            </a>
+            <a th:href="@{/rider/trips}" class="nav-item-link" th:classappend="${activePage == 'trips'} ? 'active'">
+                <i class="fa-solid fa-clock-rotate-left"></i> <span>My Ride History</span>
+            </a>
+            <a th:href="@{/rider/invoices}" class="nav-item-link" th:classappend="${activePage == 'invoices'} ? 'active'">
+                <i class="fa-solid fa-receipt"></i> <span>My Invoices</span>
+            </a>
+            <a th:href="@{/payments}" class="nav-item-link" th:classappend="${activePage == 'payments'} ? 'active'">
+                <i class="fa-solid fa-credit-card"></i> <span>My Payments</span>
+            </a>
+            <a th:href="@{/profile}" class="nav-item-link" th:classappend="${activePage == 'profile'} ? 'active'">
+                <i class="fa-regular fa-user"></i> <span>My Profile</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn btn-outline-danger w-100 btn-sm text-start ps-3">
+                <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Logout
+            </button>
+        </form>
+    </div>
+</aside>
+</body>
+</html>

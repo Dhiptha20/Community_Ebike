@@ -1,0 +1,31 @@
+package com.ebike.controller;
+
+import com.ebike.model.Account;
+import com.ebike.model.JournalEntry;
+import com.ebike.service.AccountingService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("/accounts")
+public class AccountController {
+
+    @Autowired
+    private AccountingService accountingService;
+
+    @GetMapping
+    public String listAccountsAndLedger(Model model) {
+        List<Account> accounts = accountingService.getAllAccounts();
+        List<JournalEntry> journalEntries = accountingService.getAllJournalEntries();
+
+        model.addAttribute("accounts", accounts);
+        model.addAttribute("journalEntries", journalEntries);
+
+        return "accounts";
+    }
+}

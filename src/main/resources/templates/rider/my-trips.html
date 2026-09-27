@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('My Ride History')}"></head>
+<body>
+
+<div class="app-container">
+    <div th:replace="~{fragments/sidebar :: sidebar('trips')}"></div>
+
+    <div class="app-main">
+        <div th:replace="~{fragments/navbar :: navbar('My Ride History')}"></div>
+
+        <div class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <!-- Active Trip Banner if ongoing -->
+            <div th:if="${activeTrip != null}" class="active-trip-banner mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <span class="badge bg-white text-dark fw-bold mb-2">LIVE TRIP</span>
+                        <h4 class="fw-bold mb-1">Riding Bike <span th:text="${activeTrip.bike.bikeCode}">EB-101</span></h4>
+                        <p class="small opacity-75 mb-0">Started from <strong th:text="${activeTrip.startStation != null ? activeTrip.startStation.stationName : 'Docking Station'}">Station</strong></p>
+                    </div>
+                    <button type="button" class="btn btn-danger fw-bold"
+                            th:data-trip-id="${activeTrip.tripId}"
+                            th:data-bike-code="${activeTrip.bike.bikeCode}"
+                            onclick="openEndTripModal(this.getAttribute('data-trip-id'), this.getAttribute('data-bike-code'))">
+                        <i class="fa-solid fa-flag-checkered me-1"></i> End Trip Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Trip History Table -->
+            <div class="custom-card">
+                <div class="card-header-clean">
+                    <h5><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>My Completed Rides</h5>
+                    <span class="badge bg-light text-secondary border" th:text="${#lists.size(trips)} + ' Trips Recorded'">0 Trips</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Trip ID</th>
+                                <th>Bike</th>
+                                <th>Origin & Destination</th>
+                                <th>Date & Time</th>
+                                <th>Duration</th>
+                                <th>Distance</th>
+                                <th>Fare</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="t : ${trips}">
+                                <td class="fw-bold" th:text="'#TRIP-' + ${t.tripId}">#1</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fa-solid fa-bicycle text-success me-1"></i> <span th:text="${t.bike.bikeCode}">EB-101</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small">
+                                        <div><i class="fa-solid fa-circle-dot text-success me-1" style="font-size: 8px;"></i> <span th:text="${t.startStation != null ? t.startStation.stationName : 'Docking Station'}">Origin</span></div>
+                                        <div th:if="${t.endStation != null}"><i class="fa-solid fa-location-dot text-danger me-1" style="font-size: 8px;"></i> <span th:text="${t.endStation.stationName}">Destination</span></div>
+                                    </div>
+                                </td>
+                                <td class="small" th:text="${#temporals.format(t.startTime, 'dd MMM yyyy, HH:mm')}">Time</td>
+                                <td th:text="${t.durationMinutes != null && t.durationMinutes > 0 ? t.durationMinutes + ' mins' : 'Ongoing'}">25 mins</td>
+                                <td th:text="${t.distanceKm != null ? t.distanceKm + ' km' : '—'}">4.2 km</td>
+                                <td class="fw-bold text-success">₹<span th:text="${t.fare != null ? #numbers.formatDecimal(t.fare, 1, 2) : '0.00'}">81.00</span></td>
+                                <td>
+                                    <span th:if="${t.status.name() == 'COMPLETED'}" class="badge-status badge-completed"><i class="fa-solid fa-check"></i> Completed</span>
+                                    <span th:if="${t.status.name() == 'ONGOING'}" class="badge-status badge-ongoing"><i class="fa-solid fa-spinner fa-spin"></i> In Progress</span>
+                                    <span th:if="${t.status.name() == 'CANCELLED'}" class="badge-status badge-disabled">Cancelled</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(trips)}">
+                                <td colspan="8" class="text-center text-muted py-4">No rides taken yet. Start exploring the city!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
+</div>
+
+<!-- Modal: End Trip -->
+<div class="modal fade" id="endTripModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form th:action="@{/trips/complete}" method="post">
+                <input type="hidden" id="endTripId" name="tripId">
+                <input type="hidden" name="redirectUrl" value="/rider/trips">
+
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-flag-checkered text-danger me-2"></i>End Ride & Return Bike</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Ride Reference</label>
+                        <div id="endTripLabel" class="fw-bold fs-6">Trip #</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Return Station Dock</label>
+                        <select name="endStationId" class="form-select" required>
+                            <option value="">Select Return Docking Station...</option>
+                            <option th:each="st : ${stations}" th:value="${st.stationId}" th:text="${st.stationName} + ' (' + ${st.availableSlots} + ' slots free)'"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Distance Travelled (km)</label>
+                        <input type="number" step="0.1" min="0.1" name="distanceKm" class="form-control" value="2.8" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger fw-bold">End Ride & Lock Bike</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

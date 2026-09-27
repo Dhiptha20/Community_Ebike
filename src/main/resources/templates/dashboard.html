@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Fleet Operations Dashboard')}"></head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+
+    <!-- Main Content -->
+    <div class="app-main">
+        <div th:replace="~{fragments/navbar :: navbar('Fleet Operations Dashboard')}"></div>
+
+        <div class="page-content">
+            <!-- Flash Alerts -->
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <!-- Prominent Low Battery Alert Banner if lowBatteryBikes > 0 -->
+            <div th:if="${lowBatteryBikes > 0}" class="alert alert-danger shadow-sm border-0 d-flex align-items-center justify-content-between p-3 mb-4 rounded-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="pulse-danger"></div>
+                    <div>
+                        <strong class="d-block text-danger fs-6"><i class="fa-solid fa-triangle-exclamation me-1"></i> LOW BATTERY CRITICAL ALERT</strong>
+                        <span class="small text-secondary">
+                            There are <strong th:text="${lowBatteryBikes}">0</strong> e-bikes operating with battery levels below 20%. Immediate recharge or station swapping required.
+                        </span>
+                    </div>
+                </div>
+                <a th:href="@{/telemetry}" class="btn btn-sm btn-danger fw-bold px-3">
+                    <i class="fa-solid fa-satellite-dish me-1"></i> Inspect Telemetry
+                </a>
+            </div>
+
+            <!-- KPI Metric Cards Grid -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card stat-card-emerald">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Total E-Bikes</span>
+                                <div class="stat-value" th:text="${totalBikes}">0</div>
+                            </div>
+                            <div class="stat-icon icon-emerald">
+                                <i class="fa-solid fa-bicycle"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 small text-muted d-flex justify-content-between">
+                            <span>Available: <strong class="text-success" th:text="${availableBikes}">0</strong></span>
+                            <span>In-Use: <strong class="text-primary" th:text="${inUseBikes}">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card stat-card-rose">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Low Battery (&lt;20%)</span>
+                                <div class="stat-value text-danger" th:text="${lowBatteryBikes}">0</div>
+                            </div>
+                            <div class="stat-icon icon-rose">
+                                <i class="fa-solid fa-battery-quarter"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 small text-muted">
+                            <span>Maintenance: <strong th:text="${maintenanceBikes}">0</strong> | Charging: <strong th:text="${chargingBikes}">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card stat-card-blue">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Docking Stations</span>
+                                <div class="stat-value" th:text="${totalStations}">0</div>
+                            </div>
+                            <div class="stat-icon icon-blue">
+                                <i class="fa-solid fa-charging-station"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 small text-muted">
+                            <span>Active Riders: <strong class="text-primary" th:text="${activeRiders}">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card stat-card-indigo">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Total Revenue</span>
+                                <div class="stat-value text-indigo">₹<span th:text="${#numbers.formatDecimal(totalRevenue, 1, 2)}">0.00</span></div>
+                            </div>
+                            <div class="stat-icon icon-indigo">
+                                <i class="fa-solid fa-indian-rupee-sign"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 small text-muted d-flex justify-content-between">
+                            <span>Pending Invoices: <strong class="text-warning" th:text="${pendingInvoices}">0</strong></span>
+                            <span>Budget Util: <strong class="text-dark" th:text="${budgetUtilization}">0</strong>%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive GPS Map & Low Battery Table Section -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="custom-card h-100">
+                        <div class="card-header-clean">
+                            <h5><i class="fa-solid fa-map-location-dot text-primary me-2"></i>Live Smart-City GPS Fleet Tracker</h5>
+                            <span class="badge bg-light text-secondary border">Real-Time OpenStreetMap</span>
+                        </div>
+                        <div class="p-3">
+                            <div id="fleetMap"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="custom-card h-100">
+                        <div class="card-header-clean">
+                            <h5><i class="fa-solid fa-battery-quarter text-danger me-2"></i>Recharge Queue</h5>
+                            <span class="badge bg-danger-subtle text-danger" th:text="${lowBatteryBikes} + ' Alert(s)'">0</span>
+                        </div>
+                        <div class="p-0">
+                            <div class="table-responsive">
+                                <table class="table table-custom table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Bike Code</th>
+                                            <th>Battery</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="b : ${lowBatteryList}">
+                                            <td class="fw-bold" th:text="${b.bikeCode}">EB-102</td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                                        <div class="progress-bar bg-danger" th:style="'width: ' + ${b.batteryLevel} + '%;'"></div>
+                                                    </div>
+                                                    <span class="fw-bold text-danger small" th:text="${b.batteryLevel} + '%'">15%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <form th:action="@{'/bikes/status/' + ${b.bikeId}}" method="post" class="d-inline">
+                                                    <input type="hidden" name="status" value="CHARGING">
+                                                    <button type="submit" class="btn btn-xs btn-outline-warning py-1 px-2" style="font-size: 11px;">
+                                                        <i class="fa-solid fa-bolt me-1"></i>Charge
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(lowBatteryList)}">
+                                            <td colspan="3" class="text-center text-muted py-4 small">
+                                                <i class="fa-solid fa-circle-check text-success d-block fs-4 mb-2"></i> All e-bikes have optimal battery charge (&ge;20%)
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Charts Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <div class="custom-card">
+                        <div class="card-header-clean">
+                            <h5><i class="fa-solid fa-chart-pie text-success me-2"></i>Fleet Status</h5>
+                        </div>
+                        <div class="p-3">
+                            <canvas id="bikeStatusChart" height="230"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="custom-card">
+                        <div class="card-header-clean">
+                            <h5><i class="fa-solid fa-chart-column text-indigo me-2"></i>Sector Budget vs Actual Spending</h5>
+                        </div>
+                        <div class="p-3">
+                            <canvas id="budgetChart" height="110"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Trips Table -->
+            <div class="custom-card">
+                <div class="card-header-clean">
+                    <h5><i class="fa-solid fa-route text-primary me-2"></i>Recent Fleet Trips</h5>
+                    <a th:href="@{/trips}" class="btn btn-sm btn-outline-secondary">View All Trips</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom">
+                        <thead>
+                            <tr>
+                                <th>Trip ID</th>
+                                <th>Rider</th>
+                                <th>Bike</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th>Distance</th>
+                                <th>Fare</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="t : ${recentTrips}">
+                                <td class="fw-bold" th:text="'#' + ${t.tripId}">#1</td>
+                                <td th:text="${t.rider.name}">Rahul</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border" th:text="${t.bike.bikeCode}">EB-101</span>
+                                </td>
+                                <td th:text="${#temporals.format(t.startTime, 'dd MMM yyyy, HH:mm')}">Time</td>
+                                <td th:text="${t.durationMinutes} != null ? ${t.durationMinutes} + ' mins' : 'Ongoing'">25 mins</td>
+                                <td th:text="${t.distanceKm} != null ? ${t.distanceKm} + ' km' : '-'">4.2 km</td>
+                                <td class="fw-bold text-success">₹<span th:text="${t.fare != null ? #numbers.formatDecimal(t.fare, 1, 2) : '0.00'}">81.00</span></td>
+                                <td>
+                                    <span th:if="${t.status.name() == 'COMPLETED'}" class="badge-status badge-completed"><i class="fa-solid fa-check"></i> Completed</span>
+                                    <span th:if="${t.status.name() == 'ONGOING'}" class="badge-status badge-ongoing"><i class="fa-solid fa-spinner fa-spin"></i> Ongoing</span>
+                                    <span th:if="${t.status.name() == 'CANCELLED'}" class="badge-status badge-disabled">Cancelled</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentTrips)}">
+                                <td colspan="8" class="text-center text-muted py-3">No trips recorded yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:src="@{/js/main.js}"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Pass server data to Leaflet Map
+    const bikes = /*[[${allBikes}]]*/ [];
+    const stations = /*[[${stations}]]*/ [];
+    initFleetMap(bikes, stations);
+
+    // Fleet Status Doughnut Chart
+    const statusCtx = document.getElementById('bikeStatusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Available', 'In Use', 'Maintenance', 'Charging', 'Disabled'],
+            datasets: [{
+                data: [
+                    /*[[${availableBikes}]]*/ 0,
+                    /*[[${inUseBikes}]]*/ 0,
+                    /*[[${maintenanceBikes}]]*/ 0,
+                    /*[[${chargingBikes}]]*/ 0,
+                    /*[[${disabledBikes}]]*/ 0
+                ],
+                backgroundColor: ['#10b981', '#0284c7', '#ef4444', '#f59e0b', '#64748b'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Budget vs Actual Bar Chart
+    const budgetsData = /*[[${budgets}]]*/ [];
+    const budgetLabels = budgetsData.map(b => b.sector);
+    const allocatedValues = budgetsData.map(b => b.allocatedFund);
+    const spendValues = budgetsData.map(b => b.actualSpend);
+
+    const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+    new Chart(budgetCtx, {
+        type: 'bar',
+        data: {
+            labels: budgetLabels,
+            datasets: [
+                {
+                    label: 'Allocated Fund (₹)',
+                    data: allocatedValues,
+                    backgroundColor: 'rgba(99, 102, 241, 0.75)',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Actual Spend (₹)',
+                    data: spendValues,
+                    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 12 } }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    /*]]>*/
+</script>
+</body>
+</html>

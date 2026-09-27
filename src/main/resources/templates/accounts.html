@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Double-Entry Accounting')}"></head>
+<body>
+
+<div class="app-container">
+    <div th:replace="~{fragments/sidebar :: sidebar('accounts')}"></div>
+
+    <div class="app-main">
+        <div th:replace="~{fragments/navbar :: navbar('Double-Entry Accounting & General Ledger')}"></div>
+
+        <div class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <!-- Chart of Accounts Cards / Summary -->
+            <div class="custom-card mb-4">
+                <div class="card-header-clean">
+                    <h5><i class="fa-solid fa-scale-balanced text-primary me-2"></i>Chart of Accounts</h5>
+                    <span class="badge bg-light text-secondary border">Financial General Ledger</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Account Code</th>
+                                <th>Account Name</th>
+                                <th>Type</th>
+                                <th>Current Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="acc : ${accounts}">
+                                <td class="fw-bold font-monospace text-primary" th:text="${acc.accountCode}">1010</td>
+                                <td class="fw-bold text-dark" th:text="${acc.accountName}">Cash and Bank</td>
+                                <td>
+                                    <span th:if="${acc.accountType.name() == 'ASSET'}" class="badge bg-success-subtle text-success">Asset</span>
+                                    <span th:if="${acc.accountType.name() == 'LIABILITY'}" class="badge bg-danger-subtle text-danger">Liability</span>
+                                    <span th:if="${acc.accountType.name() == 'EQUITY'}" class="badge bg-primary-subtle text-primary">Equity</span>
+                                    <span th:if="${acc.accountType.name() == 'REVENUE'}" class="badge bg-info-subtle text-info">Revenue</span>
+                                    <span th:if="${acc.accountType.name() == 'EXPENSE'}" class="badge bg-warning-subtle text-warning">Expense</span>
+                                </td>
+                                <td class="fw-bold fs-6">
+                                    ₹<span th:text="${#numbers.formatDecimal(acc.balance, 1, 2)}">0.00</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Balanced Journal Entries Ledger -->
+            <div class="custom-card">
+                <div class="card-header-clean">
+                    <h5><i class="fa-solid fa-book-journal-whills text-primary me-2"></i>Double-Entry Journal Register</h5>
+                    <span class="badge bg-light text-secondary border" th:text="${#lists.size(journalEntries)} + ' Balanced Postings'">0 Postings</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Description / Scope</th>
+                                <th>Reference</th>
+                                <th>Debit Account</th>
+                                <th>Credit Account</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="j : ${journalEntries}">
+                                <td class="small text-muted" th:text="${#temporals.format(j.transactionDate, 'dd MMM yyyy, HH:mm')}">Date</td>
+                                <td class="fw-semibold text-dark" th:text="${j.description}">Rider rental fare payment</td>
+                                <td class="small font-monospace text-muted" th:text="${j.reference}">TXN-123</td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary" th:text="${j.debitAccount.accountCode} + ' - ' + ${j.debitAccount.accountName}">1010 Cash</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success-subtle text-success" th:text="${j.creditAccount.accountCode} + ' - ' + ${j.creditAccount.accountName}">4010 Revenue</span>
+                                </td>
+                                <td class="fw-bold fs-6 text-success">
+                                    ₹<span th:text="${#numbers.formatDecimal(j.amount, 1, 2)}">81.00</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(journalEntries)}">
+                                <td colspan="6" class="text-center text-muted py-4">No journal entries posted yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

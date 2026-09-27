@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Maintenance Purchase Orders')}"></head>
+<body>
+
+<div class="app-container">
+    <div th:replace="~{fragments/sidebar :: sidebar('purchase-orders')}"></div>
+
+    <div class="app-main">
+        <div th:replace="~{fragments/navbar :: navbar('Fleet Maintenance Purchase Orders')}"></div>
+
+        <div class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <!-- Top Header & Create PO Trigger -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="fw-bold mb-1">Procurement & Maintenance Work Orders</h5>
+                    <p class="text-secondary small mb-0">Manage fleet servicing, battery purchases, and docking station hardware contracts</p>
+                </div>
+                <button type="button" class="btn btn-emerald" data-bs-toggle="modal" data-bs-target="#createPoModal">
+                    <i class="fa-solid fa-plus me-1"></i> Create Purchase Order
+                </button>
+            </div>
+
+            <!-- Purchase Orders Table -->
+            <div class="custom-card">
+                <div class="card-header-clean">
+                    <h5><i class="fa-solid fa-file-invoice text-primary me-2"></i>Purchase Order Register</h5>
+                    <span class="badge bg-light text-secondary border" th:text="${#lists.size(purchaseOrders)} + ' Orders'">0 Orders</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Vendor / Supplier</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Order Date</th>
+                                <th>Status</th>
+                                <th class="text-end">Workflow Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="po : ${purchaseOrders}">
+                                <td class="fw-bold font-monospace text-primary" th:text="${po.poNumber}">PO-1001</td>
+                                <td>
+                                    <div class="fw-bold text-dark" th:text="${po.vendor.vendorName}">Vendor</div>
+                                    <span class="small text-muted" th:text="${po.vendor.contactPerson}">Contact</span>
+                                </td>
+                                <td th:text="${po.description}">Brake pads replacement</td>
+                                <td>
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle" th:text="${po.category}">Fleet Maintenance</span>
+                                </td>
+                                <td class="fw-bold fs-6 text-dark">
+                                    ₹<span th:text="${#numbers.formatDecimal(po.amount, 1, 2)}">8,500.00</span>
+                                </td>
+                                <td class="small" th:text="${#temporals.format(po.orderDate, 'dd MMM yyyy')}">Date</td>
+                                <td>
+                                    <span th:if="${po.status.name() == 'CREATED'}" class="badge bg-secondary">Created</span>
+                                    <span th:if="${po.status.name() == 'APPROVED'}" class="badge bg-primary">Approved</span>
+                                    <span th:if="${po.status.name() == 'COMPLETED'}" class="badge bg-success">Completed</span>
+                                    <span th:if="${po.status.name() == 'CANCELLED'}" class="badge bg-danger">Cancelled</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group" th:if="${po.status.name() == 'CREATED'}">
+                                        <form th:action="@{'/purchase-orders/' + ${po.purchaseOrderId} + '/status'}" method="post" class="d-inline">
+                                            <input type="hidden" name="status" value="APPROVED">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-check me-1"></i>Approve</button>
+                                        </form>
+                                        <form th:action="@{'/purchase-orders/' + ${po.purchaseOrderId} + '/status'}" method="post" class="d-inline ms-1">
+                                            <input type="hidden" name="status" value="CANCELLED">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-xmark"></i></button>
+                                        </form>
+                                    </div>
+                                    <div th:if="${po.status.name() == 'APPROVED'}">
+                                        <form th:action="@{'/purchase-orders/' + ${po.purchaseOrderId} + '/status'}" method="post" class="d-inline">
+                                            <input type="hidden" name="status" value="COMPLETED">
+                                            <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                                <i class="fa-solid fa-circle-check me-1"></i> Mark Completed
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <span th:if="${po.status.name() == 'COMPLETED'}" class="small text-muted">
+                                        <i class="fa-solid fa-lock me-1"></i> Finalized
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(purchaseOrders)}">
+                                <td colspan="8" class="text-center text-muted py-4">No purchase orders created yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
+</div>
+
+<!-- Modal: Create PO -->
+<div class="modal fade" id="createPoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form th:action="@{/purchase-orders/create}" th:object="${newPo}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-file-signature text-primary me-2"></i>Create Purchase Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Vendor / Supplier</label>
+                        <select class="form-select" th:field="*{vendorId}" required>
+                            <option value="">Select Vendor...</option>
+                            <option th:each="v : ${vendors}" th:value="${v.vendorId}" th:text="${v.vendorName} + ' (' + ${v.contactPerson} + ')'"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Budget Category</label>
+                        <select class="form-select" th:field="*{category}">
+                            <option value="Fleet Maintenance">Fleet Maintenance</option>
+                            <option value="Docking Stations">Docking Stations</option>
+                            <option value="Battery Charging">Battery Charging</option>
+                            <option value="Fleet Rebalancing">Fleet Rebalancing</option>
+                            <option value="Operations">Operations</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Order Description & Scope</label>
+                        <textarea class="form-control" rows="3" th:field="*{description}" placeholder="Describe items, spare parts or maintenance service required" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Order Amount (₹)</label>
+                        <input type="number" step="0.01" min="1" class="form-control" th:field="*{amount}" placeholder="e.g. 15000" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-emerald fw-bold">Issue Purchase Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

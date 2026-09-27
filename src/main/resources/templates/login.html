@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — Community Shared E-Bike Fleet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #064e3b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .login-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            width: 100%;
+            max-width: 960px;
+        }
+        .login-brand-panel {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: #ffffff;
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card row g-0">
+    <!-- Brand Feature Panel -->
+    <div class="col-lg-5 login-brand-panel d-none d-lg-flex">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold">E-BIKE FLEET</h5>
+                    <span class="small opacity-75">Smart Micromobility</span>
+                </div>
+            </div>
+            <h3 class="fw-bold mb-3">Green Urban Transport at Your Fingertips</h3>
+            <p class="opacity-80 small mb-4">
+                Zero emissions, instant unlock, smart GPS telemetry, and seamless micromobility for smart communities.
+            </p>
+            <div class="d-flex flex-column gap-3 small">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-warning"></i> <span>Live GPS & Battery Health Monitoring</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-warning"></i> <span>Dynamic Automated Fare Calculation</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-warning"></i> <span>Integrated Double-Entry Accounting</span>
+                </div>
+            </div>
+        </div>
+        <div class="small opacity-75 pt-4 border-top border-white-50">
+            Powered by Java 17, Spring Boot 3 & MySQL
+        </div>
+    </div>
+
+    <!-- Login Form Panel -->
+    <div class="col-lg-7 p-4 p-md-5">
+        <div class="mb-4">
+            <h3 class="fw-bold text-dark mb-1">Welcome Back</h3>
+            <p class="text-secondary small">Sign in to access your e-bike dashboard</p>
+        </div>
+
+        <!-- Success/Error Alerts -->
+        <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center small py-2">
+            <i class="fa-solid fa-circle-exclamation me-2"></i> Invalid username or password. Please try again.
+        </div>
+        <div th:if="${param.logout}" class="alert alert-success d-flex align-items-center small py-2">
+            <i class="fa-solid fa-circle-check me-2"></i> You have successfully logged out.
+        </div>
+        <div th:if="${successMessage}" class="alert alert-success d-flex align-items-center small py-2">
+            <i class="fa-solid fa-circle-check me-2"></i> <span th:text="${successMessage}"></span>
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label for="username" class="form-label fw-semibold small text-secondary">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-regular fa-user text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" id="username" name="username" placeholder="Enter your username" required autofocus>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label fw-semibold small text-secondary">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
+                    <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-emerald w-100 py-2 mb-3 fw-bold">
+                <i class="fa-solid fa-right-to-bracket me-2"></i> Sign In
+            </button>
+        </form>
+
+        <div class="text-center small text-secondary mb-4">
+            Don't have a rider account? <a th:href="@{/register}" class="text-success fw-bold text-decoration-none">Register as Rider</a>
+        </div>
+
+        <!-- Quick 1-Click Demo Credentials Filler -->
+        <div class="bg-light p-3 rounded-3 border">
+            <div class="small fw-bold text-secondary mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                <i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i> Quick Demo Accounts (Click to Fill):
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="fillCredentials('admin', 'admin123')">
+                    <i class="fa-solid fa-crown me-1"></i> Admin
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning text-dark" onclick="fillCredentials('finance', 'finance123')">
+                    <i class="fa-solid fa-coins me-1"></i> Finance
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="fillCredentials('rider1', 'rider123')">
+                    <i class="fa-solid fa-person-biking me-1"></i> Rider 1
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fillCredentials('rider2', 'rider123')">
+                    <i class="fa-solid fa-person-biking me-1"></i> Rider 2
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

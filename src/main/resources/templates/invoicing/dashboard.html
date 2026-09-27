@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Finance & Invoicing Dashboard')}"></head>
+<body>
+
+<div class="app-container">
+    <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+
+    <div class="app-main">
+        <div th:replace="~{fragments/navbar :: navbar('Finance & Invoicing Management')}"></div>
+
+        <div class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <!-- Financial KPI Metrics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card stat-card-emerald">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Total Realized Revenue</span>
+                                <div class="stat-value text-success">₹<span th:text="${#numbers.formatDecimal(totalRevenue, 1, 2)}">0.00</span></div>
+                            </div>
+                            <div class="stat-icon icon-emerald">
+                                <i class="fa-solid fa-hand-holding-dollar"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2 small text-muted">Successful collections</div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card stat-card-amber">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Pending Invoices</span>
+                                <div class="stat-value text-warning" th:text="${pendingInvoices}">0</div>
+                            </div>
+                            <div class="stat-icon icon-amber">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2 small text-muted">Paid Invoices: <strong class="text-success" th:text="${paidInvoices}">0</strong></div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card stat-card-blue">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Purchase Orders</span>
+                                <div class="stat-value text-primary" th:text="${totalPOs}">0</div>
+                            </div>
+                            <div class="stat-icon icon-blue">
+                                <i class="fa-solid fa-file-signature"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2 small text-muted">Maintenance & procurement</div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="stat-card stat-card-rose">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="stat-label">Total Budget Spend</span>
+                                <div class="stat-value text-danger">₹<span th:text="${#numbers.formatDecimal(totalSpend, 1, 2)}">0.00</span></div>
+                            </div>
+                            <div class="stat-icon icon-rose">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </div>
+                        </div>
+                        <div class="mt-2 small text-muted">Allocated: ₹<span th:text="${#numbers.formatDecimal(totalAllocated, 1, 2)}">0.00</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Links -->
+            <div class="custom-card p-3 mb-4">
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/invoices}" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-file-invoice-dollar me-1"></i> Customer Invoices
+                    </a>
+                    <a th:href="@{/payments}" class="btn btn-outline-success">
+                        <i class="fa-solid fa-credit-card me-1"></i> Payment Receipts
+                    </a>
+                    <a th:href="@{/purchase-orders}" class="btn btn-outline-warning text-dark">
+                        <i class="fa-solid fa-wrench me-1"></i> Maintenance POs
+                    </a>
+                    <a th:href="@{/vendors}" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-truck-field me-1"></i> Vendors
+                    </a>
+                    <a th:href="@{/budgets}" class="btn btn-outline-indigo">
+                        <i class="fa-solid fa-chart-pie me-1"></i> Sector Budgets
+                    </a>
+                    <a th:href="@{/accounts}" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-scale-balanced me-1"></i> Accounting Ledger
+                    </a>
+                    <a th:href="@{/reports}" class="btn btn-emerald">
+                        <i class="fa-solid fa-file-lines me-1"></i> Financial Reports
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Invoices & Recent POs Row -->
+            <div class="row g-4 mb-4">
+                <!-- Recent Invoices -->
+                <div class="col-lg-6">
+                    <div class="custom-card h-100">
+                        <div class="card-header-clean">
+                            <h5><i class="fa-solid fa-file-invoice text-primary me-2"></i>Recent Invoices</h5>
+                            <a th:href="@{/invoices}" class="btn btn-sm btn-outline-secondary">View All</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-custom table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Rider</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="inv : ${invoices}">
+                                        <td class="fw-bold" th:text="'#INV-' + ${inv.invoiceId}">#1</td>
+                                        <td th:text="${inv.rider.name}">Rider</td>
+                                        <td class="fw-bold">₹<span th:text="${#numbers.formatDecimal(inv.amount, 1, 2)}">81.00</span></td>
+                                        <td>
+                                            <span th:if="${inv.status.name() == 'PAID'}" class="badge-status badge-paid">Paid</span>
+                                            <span th:if="${inv.status.name() == 'UNPAID'}" class="badge-status badge-unpaid">Unpaid</span>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(invoices)}">
+                                        <td colspan="4" class="text-center text-muted py-3">No invoices recorded.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Purchase Orders -->
+                <div class="col-lg-6">
+                    <div class="custom-card h-100">
+                        <div class="card-header-clean">
+                            <h5><i class="fa-solid fa-file-signature text-warning me-2"></i>Recent Purchase Orders</h5>
+                            <a th:href="@{/purchase-orders}" class="btn btn-sm btn-outline-secondary">View All</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-custom table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>PO #</th>
+                                        <th>Vendor</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="po : ${purchaseOrders}">
+                                        <td class="fw-bold font-monospace" th:text="${po.poNumber}">PO-1</td>
+                                        <td th:text="${po.vendor.vendorName}">Vendor</td>
+                                        <td class="fw-bold">₹<span th:text="${#numbers.formatDecimal(po.amount, 1, 2)}">8,500.00</span></td>
+                                        <td>
+                                            <span th:if="${po.status.name() == 'COMPLETED'}" class="badge bg-success">Completed</span>
+                                            <span th:if="${po.status.name() == 'APPROVED'}" class="badge bg-primary">Approved</span>
+                                            <span th:if="${po.status.name() == 'CREATED'}" class="badge bg-secondary">Created</span>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(purchaseOrders)}">
+                                        <td colspan="4" class="text-center text-muted py-3">No purchase orders found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sector Budget Overview -->
+            <div class="custom-card">
+                <div class="card-header-clean">
+                    <h5><i class="fa-solid fa-chart-pie text-primary me-2"></i>Sector Budget Utilization</h5>
+                    <a th:href="@{/budgets}" class="btn btn-sm btn-outline-secondary">Manage Budgets</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Sector</th>
+                                <th>Allocated Fund</th>
+                                <th>Actual Spend</th>
+                                <th>Variance</th>
+                                <th>Utilization</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="b : ${budgets}">
+                                <td class="fw-bold" th:text="${b.sector}">Sector</td>
+                                <td th:text="'₹' + ${#numbers.formatDecimal(b.allocatedFund, 1, 2)}">150,000</td>
+                                <td class="text-danger fw-semibold" th:text="'₹' + ${#numbers.formatDecimal(b.actualSpend, 1, 2)}">35,000</td>
+                                <td class="text-success fw-bold" th:text="'₹' + ${#numbers.formatDecimal(b.variance, 1, 2)}">115,000</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2" style="min-width: 120px;">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar bg-primary" th:style="'width: ' + ${b.utilizationPercentage} + '%;'"></div>
+                                        </div>
+                                        <span class="small fw-bold" th:text="${b.utilizationPercentage} + '%'">23.3%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
